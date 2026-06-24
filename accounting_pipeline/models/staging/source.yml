@@ -1,0 +1,58 @@
+version: 2
+
+sources:
+  - name: accounting_pipeline
+    schema: raw
+    tables:
+      - name: raw_ledger
+        description: "Raw ledger export from Comarch ERP, loaded by ingestion script"
+
+models:
+  - name: stg_ledger
+    description: >
+      Cleaned and standardised ledger lines from the Comarch accounting module.
+      One row per journal line (double-entry). All amounts in PLN via Kwota_PLN.
+      Raw source is semicolon-delimited CSV exported from FK module.
+
+    columns:
+
+      - name: document_number
+        description: "ERP document identifier e.g. FV/2024/03/001"
+        tests:
+          - not_null
+
+      - name: document_category
+        description: "Human-readable document category derived from document_type"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['purchase_invoice', 'sales_invoice', 'bank_statement',
+                       'journal_entry', 'credit_note', 'other']
+
+      - name: posting_date
+        tests:
+          - not_null
+
+      - name: amount_pln
+        tests:
+          - not_null
+
+      - name: currency
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['PLN', 'EUR', 'USD', 'GBP', 'CHF']
+
+      - name: is_correction
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+      - name: debit_account
+        tests:
+          - not_null
+
+      - name: credit_account
+        tests:
+          - not_null

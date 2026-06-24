@@ -1,0 +1,16 @@
+account_code,account_name,account_category,account_type
+401,Materiały biurowe,cost,operating_expense
+402,Usługi obce,cost,operating_expense
+403,Podróże służbowe,cost,operating_expense
+404,Usługi informatyczne,cost,operating_expense
+405,Czynsze,cost,operating_expense
+431,Wynagrodzenia,cost,payroll
+700,Przychody ze sprzedaży,revenue,operating_revenue
+222-1,VAT należny 23%,vat,output_vat
+222-0,VAT należny 0%,vat,output_vat_export
+223-1,VAT naliczony 23%,vat,input_vat
+131,Rachunek bankowy,balance_sheet,cash
+210,Rozrachunki z dostawcami,balance_sheet,payables
+200,Rozrachunki z odbiorcami,balance_sheet,receivables
+231,Rozrachunki z pracownikami,balance_sheet,payroll_clearing
+220,Rozrachunki publicznoprawne,balance_sheet,tax_clearing

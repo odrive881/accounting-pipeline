@@ -1,0 +1,51 @@
+version: 2
+
+models:
+
+  - name: mart_pl_by_period
+    description: >
+      Monthly P&L summary. Revenue and cost lines only -
+      VAT and balance sheet accounts excluded.
+    columns:
+      - name: posting_month_num
+        tests:
+          - not_null
+      - name: total_revenue
+        tests:
+          - not_null
+      - name: total_cost
+        tests:
+          - not_null
+      - name: revenue_minus_cost
+        tests:
+          - not_null
+
+  - name: mart_accounts_payable
+    description: >
+      Lists all paid and unpaid invoices.
+    columns:
+      - name: document_number
+        tests:
+          - not_null
+      - name: payment_status
+        tests:
+          - accepted_values:
+              values: ['paid', 'outstanding']
+
+  - name: mart_vat_summary
+    description: >
+      Input and output vat summary, totals.
+    columns:
+      - name: posting_month_num
+        tests:
+          - not_null
+      - name: vat_category
+        tests:
+          - accepted_values:
+              values: ['input', 'output', 'output_exp_0_pct']
+      - name: total_vat
+        tests:
+          - not_null
+      - name: document_count
+        tests:
+          - not_null
