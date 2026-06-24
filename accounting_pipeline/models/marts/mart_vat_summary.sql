@@ -3,54 +3,55 @@
 	config(materialized='table')
 }}
 
-with ledger as (
+WITH ledger AS (
 
-	SELECT * FROM {{ ref('stg_ledger') }}
-
-),
-
-
-
-
-vat_accounts as ( 
-
-select 
-	document_number,
-	document_category,
-	posting_month_num,
-	credit_account,
-	debit_account,
-	amount_pln,
-	description
-from ledger
-
-where debit_account = '222-1' or debit_account = '223-1'
-),
-
-
-vat_categories as (
-
-select *,
-	case
-		when credit_account = '222-0' then 'output_exp_0_pct'
-		when debit_account = '222-1' then 'output'
-		when debit_account = '223-1' then 'input'
-	end as vat_category
-from vat_accounts
+    SELECT *
+    FROM {{ ref('stg_ledger') }}
 
 ),
 
+vat_accounts AS (
 
-vat_totals as (
+    SELECT
+        document_number,
+        document_category,
+        posting_month_num,
+        credit_account,
+        debit_account,
+        amount_pln,
+        description
+    FROM ledger
+    WHERE debit_account = '222-1'
+       OR debit_account = '223-1'
 
-select 
-	posting_month_num,
-	vat_category,
-	sum(amount_pln) as total_vat,
-	count(document_number) as document_count
-from vat_categories
-group by 1, 2
+),
+
+vat_categories AS (
+
+    SELECT
+        *,
+        CASE
+            WHEN credit_account = '222-0' THEN 'output_exp_0_pct'
+            WHEN debit_account = '222-1' THEN 'output'
+            WHEN debit_account = '223-1' THEN 'input'
+        END AS vat_category
+    FROM vat_accounts
+
+),
+
+vat_totals AS (
+
+    SELECT
+        posting_month_num,
+        vat_category,
+        SUM(amount_pln) AS total_vat,
+        COUNT(document_number) AS document_count
+    FROM vat_categories
+    GROUP BY
+        posting_month_num,
+        vat_category
 
 )
 
-select * from vat_totals
+SELECT *
+FROM vat_totals;

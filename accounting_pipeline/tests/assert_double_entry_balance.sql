@@ -1,11 +1,24 @@
-with total_balance as (
-select 
-	document_number,
-	sum(case when debit_account != '' then amount_pln else 0 end) as total_debit,
-	sum(case when credit_account != '' then amount_pln else 0 end) as total_credit
-from {{ ref('stg_ledger') }}
-group by 1		
+WITH total_balance AS (
+
+    SELECT
+        document_number,
+        SUM(
+            CASE
+                WHEN debit_account != '' THEN amount_pln
+                ELSE 0
+            END
+        ) AS total_debit,
+        SUM(
+            CASE
+                WHEN credit_account != '' THEN amount_pln
+                ELSE 0
+            END
+        ) AS total_credit
+    FROM {{ ref('stg_ledger') }}
+    GROUP BY document_number
+
 )
 
-select * from total_balance
-where abs(total_debit - total_credit) > 0.01 
+SELECT *
+FROM total_balance
+WHERE ABS(total_debit - total_credit) > 0.01;

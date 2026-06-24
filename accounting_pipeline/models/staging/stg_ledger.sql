@@ -2,15 +2,13 @@ WITH source AS (
 
 SELECT * FROM {{ source('accounting_pipeline', 'raw_ledger') }}
 
--- select * from raw.raw_ledger
-
 ),
 
 cleaned AS (
 
-select 
+SELECT
 	document_number,
-	
+
    		CASE document_type
             WHEN 'FV' THEN 'purchase_invoice'
             WHEN 'FS' THEN 'sales_invoice'
@@ -27,8 +25,8 @@ select
 	END AS is_correction,
 		
 	
-	document_date_raw::date as document_date,
-	posting_date_raw::date as posting_date,
+	document_date_raw::DATE AS document_date,
+	posting_date_raw::DATE AS posting_date,
 
 	EXTRACT(YEAR FROM posting_date_raw::DATE) AS posting_year,
 	EXTRACT(MONTH FROM posting_date_raw::DATE) AS posting_month_num,
@@ -37,8 +35,7 @@ select
 	credit_account AS credit_account,
 
 
-
-	--Creates clean parent account columns. Drops any custom analytical account names that might throw off later parsing logic:
+	--Creates clean parent account columns. Drops any custom analytical account names that might throw off later parsing logic.
 	CASE
 	WHEN SPLIT_PART(debit_account, '-', 2) IN ('KLIENT', 'DOSTAWCA', 'ZUS', 'US') THEN SPLIT_PART(debit_account, '-', 1)
 	WHEN SPLIT_PART(debit_account, '-', 2) IN ('0', '1', '2') THEN debit_account
@@ -64,8 +61,8 @@ select
 			ELSE false
 		END AS is_in_pln,
 		
-	amount_pln_raw as amount_pln,
-	exchange_rate_raw as exchange_rate,
+	amount_pln_raw AS amount_pln,
+	exchange_rate_raw AS exchange_rate,
 	
 	description,
 	counterparty_name,
@@ -76,7 +73,7 @@ select
 	accounting_period,
 	
 	entered_by,
-	entered_at_raw::timestamp as entered_at
+	entered_at_raw::TIMESTAMP AS entered_at
 
 
 	FROM source
@@ -84,11 +81,11 @@ select
 	WHERE amount_pln_raw IS NOT NULL
 ),
 
-validated as (
+validated AS (
 
 SELECT *
 FROM cleaned c
-LEFT JOIN staging.chart_of_accounts coa on c.debit_account_parent = coa.account_code
+LEFT JOIN staging.chart_of_accounts coa ON c.debit_account_parent = coa.account_code
 
 )
 
