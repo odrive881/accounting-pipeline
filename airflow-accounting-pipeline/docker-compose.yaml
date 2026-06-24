@@ -115,9 +115,9 @@ services:
     volumes:
       - accounting-db-data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"  
+      - "${DB_HOST_PORT}:5432"
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
       interval: 5s
       retries: 5
 

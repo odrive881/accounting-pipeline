@@ -96,6 +96,7 @@ airflow-accounting-pipeline/
    docker compose exec airflow-worker bash -c \
      "cd /opt/airflow/accounting_pipeline && dbt build --profiles-dir /opt/airflow/accounting_pipeline"
    ```
+6. For data visualization, connect PowerBI to the host-side port specified in .env.
 
 ## Data model notes
 
