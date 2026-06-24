@@ -22,4 +22,4 @@ WITH vat_by_months AS (
 SELECT
     ABS(total_input_vat - total_output_vat) AS out_of_bounds
 FROM vat_by_months
-WHERE ABS(total_input_vat - total_output_vat) > 20000;
+WHERE ABS(total_input_vat - total_output_vat) > 20000

@@ -78,7 +78,7 @@ SELECT
 
 FROM aggregated
 GROUP BY posting_month_num
-ORDER BY posting_month_num;
+ORDER BY posting_month_num
 
 	
 	

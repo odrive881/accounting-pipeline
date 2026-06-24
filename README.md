@@ -104,7 +104,9 @@ airflow-accounting-pipeline/
   amounts are recorded as positive values, with direction indicated by
   separate account columns (`Konto_Wn` / `Konto_Ma`) rather than by sign.
 - Analytical sub-accounts (e.g. `210-DOSTAWCA-001`) are resolved to their
-  parent account code before joining to the chart of accounts.
+  parent account code before joining to the chart of accounts. The account 
+  numbers are purposefully labeled in a non-standard way, as proof of 
+  the versatility of such pipelines.
 - VAT clearing accounts (`222-1`, `223-1`) are excluded from P&L
   aggregation and reported separately in `mart_vat_summary`.
 
