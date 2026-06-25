@@ -21,4 +21,4 @@ WITH total_balance AS (
 
 SELECT *
 FROM total_balance
-WHERE ABS(total_debit - total_credit) > 0.01;
+WHERE ABS(total_debit - total_credit) > 0.01

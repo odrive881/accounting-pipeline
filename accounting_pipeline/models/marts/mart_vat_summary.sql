@@ -54,4 +54,4 @@ vat_totals AS (
 )
 
 SELECT *
-FROM vat_totals;
+FROM vat_totals

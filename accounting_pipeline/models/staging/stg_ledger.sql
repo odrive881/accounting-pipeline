@@ -85,7 +85,7 @@ validated AS (
 
 SELECT *
 FROM cleaned c
-LEFT JOIN staging.chart_of_accounts coa ON c.debit_account_parent = coa.account_code
+LEFT JOIN {{ ref('chart_of_accounts') }} coa ON c.debit_account_parent = coa.account_code
 
 )
 
