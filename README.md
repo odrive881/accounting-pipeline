@@ -8,7 +8,8 @@ running fully in Docker.
 ## What this project does
 
 - Ingests semicolon-delimited CSV ledger exports (Polish ERP format)
-- Loads raw data into PostgreSQL via a Python ingestion script
+- Loads raw data into PostgreSQL via a Python ingestion script,
+  logs everything in json
 - Cleans, types, and standardizes the data in a dbt staging layer
 - Produces three reporting marts: monthly P&L, accounts payable aging,
   and VAT summary
@@ -79,9 +80,12 @@ airflow-accounting-pipeline/
 ## Setup
 
 1. Clone the repository
-2. Copy the example config files and fill in real values:
+2. Copy the example config files and fill in real values ONLY in .env:
    ```bash
+   cd airflow-accounting-pipeline
    cp .env.example .env
+   cd..
+   cd accounting_pipeline
    cp profiles.yml.example profiles.yml
    ```
 3. Build and start the stack:
@@ -96,7 +100,7 @@ airflow-accounting-pipeline/
    docker compose exec airflow-worker bash -c \
      "cd /opt/airflow/accounting_pipeline && dbt build --profiles-dir /opt/airflow/accounting_pipeline"
    ```
-6. For data visualization, connect PowerBI to the host-side port specified in .env.
+6. For data visualization, connect PowerBI to the host-side port specified in .env (default is 5433)
 
 ## Data model notes
 

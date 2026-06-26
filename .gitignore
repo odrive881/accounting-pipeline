@@ -27,6 +27,7 @@ airflow-accounting-pipeline/plugins/
 data/*.csv
 data/*.xlsx
 data/*.xml
+data/*.json
 !data/.gitkeep
 
 # ── OS / editor noise ────────────────────────────────────────────────────
