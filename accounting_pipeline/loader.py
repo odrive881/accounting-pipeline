@@ -140,7 +140,6 @@ def run_loader():
     if file_loaded:
         if table_exists:
             with engine.connect() as conn:
-                conn.execute(text("CREATE SCHEMA IF NOT EXISTS raw"))           #added this
                 conn.execute(text("TRUNCATE TABLE raw.raw_ledger"))
                 # conn.commit()     #caused errors: commented it out
             df.to_sql(name="raw_ledger",
