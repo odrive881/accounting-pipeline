@@ -15,7 +15,8 @@ running fully in Docker.
   and VAT summary
 - Validates data integrity with dbt tests, including a custom
   double-entry balance check
-- Runs on a schedule via Airflow, fully containerized with Docker Compose
+- Can be run manually or on a schedule via Airflow, fully containerized
+  with Docker Compose
 
 ## Architecture
 
@@ -33,7 +34,8 @@ CSV export → Python loader → raw.raw_ledger (Postgres)
                                 Power BI 
 ```
 
-Orchestrated end to end by an Airflow DAG: `run_loader` → `run_dbt_build`.
+Orchestrated end to end by an Airflow DAG:
+`ensure_raw_schema` → `run_loader` → `run_dbt_seed` → `run_dbt_build`.
 
 ## Stack
 
@@ -50,7 +52,7 @@ Orchestrated end to end by an Airflow DAG: `run_loader` → `run_dbt_build`.
 ```
 accounting_pipeline/
 ├── dbt_project.yml
-├── profiles.yml.example      # copy to profiles.yml, fill in real values
+├── profiles.yml.example      # copy to profiles.yml, automatically takes in values from .env
 ├── models/
 │   ├── staging/
 │   │   ├── stg_ledger.sql

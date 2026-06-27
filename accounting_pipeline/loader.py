@@ -1,18 +1,42 @@
-def run_loader():
-    import json
-    import pandas as pd
-    import datetime
-    from sqlalchemy import create_engine, text
-    from sqlalchemy import inspect
-    from pandas.errors import ParserError
-    from pandas.errors import EmptyDataError
-    import os
+from sqlite3 import ProgrammingError
+import json
+import pandas as pd
+import datetime
+from sqlalchemy import create_engine, text
+from sqlalchemy import inspect
+from pandas.errors import ParserError
+from pandas.errors import EmptyDataError
+import os
 
+def start_engine():
     db_user = os.environ['DB_USER']
     db_password = os.environ['DB_PASSWORD']
     db_host = os.environ['DB_HOST']
     db_port = os.environ['DB_PORT']
     db_name = os.environ['DB_NAME']
+    return create_engine(
+        f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+)
+
+
+def ensure_raw_schema():
+    engine = start_engine()
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("CREATE SCHEMA IF NOT EXISTS raw"))
+    except ProgrammingError as e:
+        if "already exists" not in str(e):
+            raise
+    finally:
+        engine.dispose()
+
+def run_loader():
+
+    engine = start_engine()
+
+
+
 
 
     def validate_infile():
@@ -43,8 +67,6 @@ def run_loader():
 
     df.columns = df.columns.str.strip()
 
-
-
     """Renaming columns"""
     column_map = {
         'Nr_dok':       'document_number',
@@ -68,15 +90,12 @@ def run_loader():
 
     df = df.rename(columns=column_map)
 
-
-
     """Stripping whitespace from column names"""
     df.columns = df.columns.str.strip()
     if file_loaded:
         columns_stripped = True
     else:
         columns_stripped = False
-
 
     """Converting dates to datetime"""
     cols1 = None
@@ -97,8 +116,6 @@ def run_loader():
     except KeyError:
         print(f"Incorrect number of columns in {cols1}, should be {["document_date_raw", "posting_date_raw", "entered_at_raw"]}")
 
-
-
     """Removing useless punctuation from NIP numbers"""
     nip_validated = False
     def validate_nip(nip_col):
@@ -107,8 +124,6 @@ def run_loader():
     validate_nip("counterparty_nip")
     if file_loaded:
         nip_validated = True
-
-
 
     """Changing the commas for dots in money amounts"""
     punctuation_fixed = False
@@ -125,23 +140,19 @@ def run_loader():
     except AttributeError as e:
         print(e)
 
-
-
-
-    """Exporting table to sql"""
-    engine = create_engine(
-        f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-)
-
     inspector = inspect(engine)
     table_exists = inspector.has_table("raw_ledger", schema="raw")
-    exported_file_to_sql = False
+
+
+
+
+
+
 
     if file_loaded:
         if table_exists:
-            with engine.connect() as conn:
+            with engine.begin() as conn:
                 conn.execute(text("TRUNCATE TABLE raw.raw_ledger"))
-                # conn.commit()     #caused errors: commented it out
             df.to_sql(name="raw_ledger",
                   con=engine,
                   schema="raw",
@@ -150,8 +161,6 @@ def run_loader():
                   method="multi",
         )
         else:
-            with engine.connect() as conn:           #added this
-                conn.execute(text("CREATE SCHEMA IF NOT EXISTS raw"))           #added this
             df.to_sql(name="raw_ledger",
               con=engine,
               schema="raw",
@@ -160,9 +169,8 @@ def run_loader():
               method="multi",
         )
 
-
-        print(f"\nLoaded {len(df)} rows into raw.raw_ledger")
-        exported_file_to_sql = True
+    engine.dispose()
+    exported_file_to_sql = True
 
 
 
