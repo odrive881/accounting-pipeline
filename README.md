@@ -76,7 +76,8 @@ airflow-accounting-pipeline/
 ├── Dockerfile
 ├── .env.example               # copy to .env, fill in real values
 └── dags/
-    └── accounting_pipeline_dag.py
+    ├── accounting_pipeline_dag.py
+    └── dag_config.yaml       # you can set the DAG schedule here
 ```
 
 ## Setup
