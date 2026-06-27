@@ -1,0 +1,6 @@
+# Airflow schedule.
+# Use null for manual runs only, a cron expression like "0 2 * * *", or others like "@daily".
+schedule: null
+
+# Whether to backfill missed runs.
+catchup: false

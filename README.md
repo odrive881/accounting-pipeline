@@ -82,7 +82,8 @@ airflow-accounting-pipeline/
 ## Setup
 
 1. Clone the repository
-2. Copy the example config files and fill in real values ONLY in .env:
+2. Copy the example config files and fill in real values ONLY in .env 
+   Use the following sequence:
    ```bash
    cd airflow-accounting-pipeline
    cp .env.example .env
@@ -90,8 +91,10 @@ airflow-accounting-pipeline/
    cd accounting_pipeline
    cp profiles.yml.example profiles.yml
    ```
-3. Build and start the stack:
+3. Go into airflow-accounting-pipeline. Build and start the stack:
    ```bash
+   cd..
+   cd airflow-accounting-pipeline
    docker compose up airflow-init
    docker compose up -d
    ```

@@ -2,17 +2,24 @@ from airflow import DAG
 from airflow.providers.standard.operators.bash import BashOperator
 from airflow.providers.standard.operators.python import PythonOperator
 from datetime import datetime
-
+import yaml
 import sys
+from pathlib import Path
+
+
 sys.path.append("/opt/airflow/accounting_pipeline")
 from loader import run_loader
 from loader import ensure_raw_schema
 
+config_path = Path(__file__).with_name("dag_config.yaml")
+with open(config_path, "r") as f:
+    config = yaml.safe_load(f)
+
 with DAG(
     dag_id='accounting_pipeline',
     start_date=datetime(2024, 1, 1),
-    schedule=None,
-    catchup=False,
+    schedule=config["schedule"],
+    catchup=config["catchup"],
 ) as dag:
 
     """First step"""

@@ -9,6 +9,7 @@ from pandas.errors import EmptyDataError
 import os
 
 def start_engine():
+    """Assigns the values provided in .env, and consequently profiles.yml to an SQL connection"""
     db_user = os.environ['DB_USER']
     db_password = os.environ['DB_PASSWORD']
     db_host = os.environ['DB_HOST']
@@ -20,6 +21,7 @@ def start_engine():
 
 
 def ensure_raw_schema():
+    """Separates the creation of the schema from loading data for the sake of reliability (eg. avoiding double execution errors)"""
     engine = start_engine()
 
     try:
@@ -31,13 +33,11 @@ def ensure_raw_schema():
     finally:
         engine.dispose()
 
+
+
 def run_loader():
 
     engine = start_engine()
-
-
-
-
 
     def validate_infile():
         """Loading the raw file"""
@@ -57,6 +57,45 @@ def run_loader():
             print("File is empty")
         else:
             return dataframe
+
+    def convert_dates(columns):
+        """Converting dates to datetime"""
+        for column in columns:
+            df[column] = pd.to_datetime(df[column], errors='coerce', format="mixed")
+
+    def validate_nip(nip_col):
+        """Parses the NIP number to be only integers"""
+        df[nip_col] = df[nip_col].str.replace(r'[^\w\s]+', '', regex=True)
+
+    def fix_punctuation(series):
+        """Replaces the Polish comma decimal delimiter with a more universally parsable dot"""
+        return (series.str.replace(".", "", regex=False)
+                .str.replace(",", ".", regex=False)
+                .pipe(pd.to_numeric, errors='coerce'))
+
+    def get_summary(infile_check, col_strip_check, dates_check, nip_check, sql_check):
+        """Produces a json log of the loading process"""
+        return (
+            {"Time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+             "File loaded": infile_check,
+             "Columns stripped": col_strip_check,
+             "Dates converted": dates_check,
+             "NIP number cleaned": nip_check,
+             "Numbers refactored from Polish to Universal format": punctuation_fixed,
+             "Loaded into SQL": sql_check,
+             "Numeric errors found": int(df["amount_pln_raw"].isnull().sum()),
+             "Amount of date errors found": df[["document_date_raw", "posting_date_raw", 'entered_at_raw']].isnull().sum().to_dict(),
+             "Document types found": df["document_type"].value_counts().to_dict()}
+        )
+
+    def export_to_json(filepath, data):
+        """Exports to json"""
+        with open(filepath, "a") as f:
+            json.dump(data, f, indent=2)
+
+
+
+
 
     df = validate_infile()
 
@@ -101,10 +140,6 @@ def run_loader():
     cols1 = None
     dates_converted = False
 
-    def convert_dates(columns):
-        for column in columns:
-            df[column] = pd.to_datetime(df[column], errors='coerce', format="mixed")
-
     try:
         cols1 = ["document_date_raw", "posting_date_raw", "entered_at_raw"]
         if len(cols1) == 3:
@@ -118,19 +153,12 @@ def run_loader():
 
     """Removing useless punctuation from NIP numbers"""
     nip_validated = False
-    def validate_nip(nip_col):
-        df[nip_col] = df[nip_col].str.replace(r'[^\w\s]+', '', regex=True)
-
     validate_nip("counterparty_nip")
     if file_loaded:
         nip_validated = True
 
     """Changing the commas for dots in money amounts"""
     punctuation_fixed = False
-    def fix_punctuation(series):
-        return (series.str.replace(".", "", regex=False)
-                .str.replace(",", ".", regex=False)
-                .pipe(pd.to_numeric, errors='coerce'))
 
     try:
         for col in ["amount_original_raw", "amount_pln_raw", 'exchange_rate_raw']:
@@ -143,12 +171,7 @@ def run_loader():
     inspector = inspect(engine)
     table_exists = inspector.has_table("raw_ledger", schema="raw")
 
-
-
-
-
-
-
+    """Sending the roughly parsed CSV to Postgres"""
     if file_loaded:
         if table_exists:
             with engine.begin() as conn:
@@ -172,30 +195,8 @@ def run_loader():
     engine.dispose()
     exported_file_to_sql = True
 
-
-
     """Create a JSON summary"""
-    def get_summary(infile_check, col_strip_check, dates_check, nip_check, sql_check):
-        return (
-            {"Time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-             "File loaded": infile_check,
-             "Columns stripped": col_strip_check,
-             "Dates converted": dates_check,
-             "NIP number cleaned": nip_check,
-             "Numbers refactored from Polish to Universal format": punctuation_fixed,
-             "Loaded into SQL": sql_check,
-             "Numeric errors found": int(df["amount_pln_raw"].isnull().sum()),
-             "Amount of date errors found": df[["document_date_raw", "posting_date_raw", 'entered_at_raw']].isnull().sum().to_dict(),
-             "Document types found": df["document_type"].value_counts().to_dict()}
-
-
-        )
-
     path = "/opt/airflow/accounting_pipeline/data/loader_report.json"
-
-    def export_to_json(filepath, data):
-        with open(filepath, "a") as f:
-            json.dump(data, f, indent=2)
 
     export_to_json(path, get_summary(file_loaded, columns_stripped, dates_converted, nip_validated, exported_file_to_sql))
 
