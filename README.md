@@ -83,8 +83,7 @@ airflow-accounting-pipeline/
 ## Setup
 
 1. Clone the repository
-2. Copy the example config files and fill in real values ONLY in .env 
-   Use the following sequence:
+2. Copy the example config files and fill in real values ONLY in .env. Use the following sequence:
    ```bash
    cd airflow-accounting-pipeline
    cp .env.example .env
