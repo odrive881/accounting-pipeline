@@ -19,13 +19,13 @@ with DAG(
     dag_id='accounting_pipeline',
     start_date=datetime(2024, 1, 1),
     schedule=config["schedule"],
-    catchup=config["catchup"],
+    catchup=config["catchup"]
 ) as dag:
 
     """First step"""
     ensure_raw_schema = PythonOperator(
         task_id='ensure_raw_schema',
-        python_callable=ensure_raw_schema,
+        python_callable=ensure_raw_schema
     )
 
     """Second step"""

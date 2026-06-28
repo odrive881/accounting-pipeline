@@ -8,6 +8,17 @@ from pandas.errors import ParserError
 from pandas.errors import EmptyDataError
 import os
 
+def log_error(exc: Exception):
+    entry = {
+        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "status": "error",
+        "error_type": type(exc).__name__,
+        "message": str(exc),
+    }
+    filepath = "/opt/airflow/accounting_pipeline/data/loader_report.json"
+    with open(filepath, "a") as f:
+        json.dump(entry, f, indent=2)
+
 def start_engine():
     """Assigns the values provided in .env, and consequently profiles.yml to an SQL connection"""
     db_user = os.environ['DB_USER']
@@ -19,7 +30,6 @@ def start_engine():
         f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 )
 
-
 def ensure_raw_schema():
     """Separates the creation of the schema from loading data for the sake of reliability (eg. avoiding double execution errors)"""
     engine = start_engine()
@@ -29,11 +39,10 @@ def ensure_raw_schema():
             conn.execute(text("CREATE SCHEMA IF NOT EXISTS raw"))
     except ProgrammingError as e:
         if "already exists" not in str(e):
-            raise
+            log_error(e)
+            raise e
     finally:
         engine.dispose()
-
-
 
 def run_loader():
 
@@ -48,13 +57,13 @@ def run_loader():
                              dtype=str,
                              keep_default_na=False)
         except FileNotFoundError:
-            print("File does not exist")
+            log_error(Exception("File does not exist"))
         except PermissionError:
-            print("No permission to read file")
+            log_error(Exception("No permission to read file"))
         except ParserError as e:
-            print(e)
+            log_error(e)
         except EmptyDataError:
-            print("File is empty")
+            log_error(Exception("File is empty"))
         else:
             return dataframe
 
@@ -92,10 +101,6 @@ def run_loader():
         """Exports to json"""
         with open(filepath, "a") as f:
             json.dump(data, f, indent=2)
-
-
-
-
 
     df = validate_infile()
 
@@ -149,7 +154,8 @@ def run_loader():
         else:
             raise KeyError
     except KeyError:
-        print(f"Incorrect number of columns in {cols1}, should be {["document_date_raw", "posting_date_raw", "entered_at_raw"]}")
+        log_error(Exception(f"Incorrect number of columns in {cols1}, should be {["document_date_raw", "posting_date_raw", "entered_at_raw"]}"))
+        raise SystemExit(1)
 
     """Removing useless punctuation from NIP numbers"""
     nip_validated = False
@@ -166,7 +172,8 @@ def run_loader():
         if file_loaded:
             punctuation_fixed = True
     except AttributeError as e:
-        print(e)
+        log_error(e)
+        raise e
 
     inspector = inspect(engine)
     table_exists = inspector.has_table("raw_ledger", schema="raw")
@@ -197,6 +204,5 @@ def run_loader():
 
     """Create a JSON summary"""
     path = "/opt/airflow/accounting_pipeline/data/loader_report.json"
-
     export_to_json(path, get_summary(file_loaded, columns_stripped, dates_converted, nip_validated, exported_file_to_sql))
 
